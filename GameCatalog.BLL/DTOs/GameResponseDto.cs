@@ -1,4 +1,4 @@
-﻿namespace GameCatalog.Presentation.DTOs;
+﻿namespace GameCatalog.BLL.DTOs;
 
 public class GameResponseDto
 {

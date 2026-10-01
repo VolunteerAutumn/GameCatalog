@@ -1,6 +1,6 @@
 ﻿using GameCatalog.BLL.Interfaces;
 using GameCatalog.DAL.Entities;
-using GameCatalog.Presentation.DTOs;
+using GameCatalog.BLL.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameCatalog.Presentation.Controllers;

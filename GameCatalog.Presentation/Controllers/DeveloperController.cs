@@ -1,6 +1,8 @@
-﻿using GameCatalog.BLL.Interfaces;
+﻿using AutoMapper;
+using FluentValidation;
+using GameCatalog.BLL.DTOs;
+using GameCatalog.BLL.Interfaces;
 using GameCatalog.DAL.Entities;
-using GameCatalog.Presentation.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameCatalog.Presentation.Controllers;
@@ -10,10 +12,20 @@ namespace GameCatalog.Presentation.Controllers;
 public class DeveloperController : ControllerBase
 {
     private readonly IDeveloperService _service;
+    private readonly IMapper _mapper;
+    private readonly IValidator<DeveloperCreateDto> _createValidator;
+    private readonly IValidator<DeveloperUpdateDto> _updateValidator;
 
-    public DeveloperController(IDeveloperService service)
+    public DeveloperController(
+        IDeveloperService service,
+        IMapper mapper,
+        IValidator<DeveloperCreateDto> createValidator,
+        IValidator<DeveloperUpdateDto> updateValidator)
     {
         _service = service;
+        _mapper = mapper;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -21,20 +33,7 @@ public class DeveloperController : ControllerBase
     {
         var developers = await _service.GetAllAsync();
 
-        var result = developers.Select(d => new DeveloperResponseDto
-        {
-            Id = d.Id,
-            Name = d.Name,
-            Country = d.Country,
-            Games = d.Games.Select(g => new GameShortDto
-            {
-                Id = g.Id,
-                Title = g.Title,
-                ReleaseDate = g.ReleaseDate,
-                Price = g.Price,
-                DeveloperId = g.DeveloperId
-            }).ToList()
-        }).ToList();
+        var result = _mapper.Map<List<DeveloperResponseDto>>(developers);
 
         return Ok(result);
     }
@@ -47,40 +46,45 @@ public class DeveloperController : ControllerBase
         if (developer == null)
             return NotFound();
 
-        var result = new DeveloperResponseDto
-        {
-            Id = developer.Id,
-            Name = developer.Name,
-            Country = developer.Country,
-            Games = developer.Games.Select(g => new GameShortDto
-            {
-                Id = g.Id,
-                Title = g.Title,
-                ReleaseDate = g.ReleaseDate,
-                Price = g.Price,
-                DeveloperId = g.DeveloperId
-            }).ToList()
-        };
+        var result = _mapper.Map<DeveloperResponseDto>(developer);
 
         return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Developer>> Create(Developer developer)
+    public async Task<ActionResult<DeveloperResponseDto>> Create(
+        DeveloperCreateDto dto)
     {
+        var validationResult = await _createValidator.ValidateAsync(dto);
+
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var developer = _mapper.Map<Developer>(dto);
+
         var createdDeveloper = await _service.CreateAsync(developer);
+
+        var result = _mapper.Map<DeveloperResponseDto>(createdDeveloper);
 
         return CreatedAtAction(
             nameof(GetById),
-            new { id = createdDeveloper.Id },
-            createdDeveloper);
+            new { id = result.Id },
+            result);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, Developer developer)
+    public async Task<IActionResult> Update(
+        int id,
+        DeveloperUpdateDto dto)
     {
-        if (id != developer.Id)
-            return BadRequest();
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var developer = _mapper.Map<Developer>(dto);
+
+        developer.Id = id;
 
         var updated = await _service.UpdateAsync(developer);
 
