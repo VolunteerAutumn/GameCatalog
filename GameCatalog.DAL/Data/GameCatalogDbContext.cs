@@ -1,9 +1,11 @@
 ﻿using GameCatalog.DAL.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameCatalog.DAL.Data;
 
-public class GameCatalogDbContext : DbContext
+public class GameCatalogDbContext : IdentityDbContext<ApplicationUser>
 {
     public GameCatalogDbContext(
         DbContextOptions<GameCatalogDbContext> options)
@@ -17,8 +19,14 @@ public class GameCatalogDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Game>()
             .Property(g => g.ReleaseDate)
             .HasColumnType("timestamp without time zone");
+
+        modelBuilder.Entity<IdentityRole>()
+            .HasIndex(r => r.NormalizedName)
+            .IsUnique();
     }
 }

@@ -2,11 +2,13 @@
 using GameCatalog.DAL.Entities;
 using GameCatalog.BLL.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameCatalog.Presentation.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class GameController : ControllerBase
 {
     private readonly IGameService _service;

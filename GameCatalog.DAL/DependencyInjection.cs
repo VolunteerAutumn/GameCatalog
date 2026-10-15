@@ -19,6 +19,7 @@ public static class DependencyInjection
 
         services.AddScoped<IDeveloperRepository, DeveloperRepository>();
         services.AddScoped<IGameRepository, GameRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
 
         return services;
     }

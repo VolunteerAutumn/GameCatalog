@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
 using FluentValidation;
 using GameCatalog.DAL;
+using GameCatalog.DAL.Data;
+using GameCatalog.DAL.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,6 +31,13 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssemblyContaining<
             Validators.DeveloperCreateValidator>();
+
+        services
+            .AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<GameCatalogDbContext>();
+
+        services.AddScoped<Interfaces.IRoleService, Services.RoleService>();
 
         return services;
     }
