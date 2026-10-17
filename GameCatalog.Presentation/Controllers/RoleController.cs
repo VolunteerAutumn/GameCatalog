@@ -37,6 +37,7 @@ public class RoleController : ControllerBase
     }
 
     // POST: api/Role
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] RoleRequest request)
     {
@@ -64,6 +65,7 @@ public class RoleController : ControllerBase
     }
 
     // PUT: api/Role/{id}
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(
         string id,
@@ -95,6 +97,7 @@ public class RoleController : ControllerBase
     }
 
     // DELETE: api/Role/{id}
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {

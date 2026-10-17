@@ -1,5 +1,4 @@
-﻿
-namespace GameCatalog.Presentation.Middleware;
+﻿namespace GameCatalog.Presentation.Middleware;
 
 public class ApiKeyMW
 {

@@ -3,6 +3,7 @@ using FluentValidation;
 using GameCatalog.BLL.DTOs;
 using GameCatalog.BLL.Interfaces;
 using GameCatalog.DAL.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameCatalog.Presentation.Controllers;
@@ -51,6 +52,7 @@ public class DeveloperController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<DeveloperResponseDto>> Create(
         DeveloperCreateDto dto)
@@ -72,6 +74,7 @@ public class DeveloperController : ControllerBase
             result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(
         int id,
@@ -94,6 +97,7 @@ public class DeveloperController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

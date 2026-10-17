@@ -18,6 +18,7 @@ public class GameRepository : IGameRepository
     {
         return await _context.Games
             .Include(g => g.Developer)
+            .Include(g => g.Genres)
             .ToListAsync();
     }
 
@@ -25,6 +26,7 @@ public class GameRepository : IGameRepository
     {
         return await _context.Games
             .Include(g => g.Developer)
+            .Include(g => g.Genres)
             .FirstOrDefaultAsync(g => g.Id == id);
     }
 
@@ -35,6 +37,7 @@ public class GameRepository : IGameRepository
 
         return await _context.Games
             .Include(g => g.Developer)
+            .Include(g => g.Genres)
             .FirstAsync(g => g.Id == game.Id);
     }
 

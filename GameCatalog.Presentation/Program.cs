@@ -1,4 +1,3 @@
-
 using GameCatalog.BLL;
 using GameCatalog.DAL;
 using GameCatalog.DAL.Data;
@@ -132,19 +131,24 @@ using (var scope = app.Services.CreateScope())
 
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    if (!await roleManager.RoleExistsAsync("User"))
+    async Task EnsureRoleAsync(string roleName)
     {
-        var result = await roleManager.CreateAsync(
-            new IdentityRole("User"));
-
-        if (!result.Succeeded)
+        if (!await roleManager.RoleExistsAsync(roleName))
         {
-            throw new InvalidOperationException(
-                "Failed to create User role: " +
-                string.Join("; ",
-                    result.Errors.Select(error => error.Description)));
+            var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+
+            if (!result.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to create {roleName} role: " +
+                    string.Join("; ",
+                        result.Errors.Select(error => error.Description)));
+            }
         }
     }
+
+    await EnsureRoleAsync("User");
+    await EnsureRoleAsync("Admin");
 }
 
 if (app.Environment.IsDevelopment())
@@ -153,17 +157,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Exception handler FIRST so it wraps everything below it.
+app.UseMiddleware<ExceptionHandleMW>();
 app.UseMiddleware<TimestampMW>();
 app.UseMiddleware<BasicInfoMW>();
 app.UseMiddleware<IPMW>();
 app.UseMiddleware<RequestCounterMW>();
+app.UseMiddleware<ApiKeyMW>();
 
-// Authenticate JWTs before checking authorization.
 app.UseAuthentication();
 app.UseAuthorization();
-
-// API-key protection; auth endpoints are exempted inside this middleware.
-app.UseMiddleware<ApiKeyMW>();
 
 app.MapControllers();
 

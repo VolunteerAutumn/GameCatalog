@@ -1,8 +1,10 @@
-﻿using GameCatalog.BLL.Interfaces;
-using GameCatalog.DAL.Entities;
+﻿using AutoMapper;
+using FluentValidation;
 using GameCatalog.BLL.DTOs;
-using Microsoft.AspNetCore.Mvc;
+using GameCatalog.BLL.Interfaces;
+using GameCatalog.DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GameCatalog.Presentation.Controllers;
 
@@ -12,34 +14,27 @@ namespace GameCatalog.Presentation.Controllers;
 public class GameController : ControllerBase
 {
     private readonly IGameService _service;
+    private readonly IMapper _mapper;
+    private readonly IValidator<GameCreateDto> _createValidator;
+    private readonly IValidator<GameUpdateDto> _updateValidator;
 
-    public GameController(IGameService service)
+    public GameController(
+        IGameService service,
+        IMapper mapper,
+        IValidator<GameCreateDto> createValidator,
+        IValidator<GameUpdateDto> updateValidator)
     {
         _service = service;
+        _mapper = mapper;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
     public async Task<ActionResult<List<GameResponseDto>>> GetAll()
     {
         var games = await _service.GetAllAsync();
-
-        var result = games.Select(g => new GameResponseDto
-        {
-            Id = g.Id,
-            Title = g.Title,
-            ReleaseDate = g.ReleaseDate,
-            Price = g.Price,
-            DeveloperId = g.DeveloperId,
-            Developer = g.Developer == null
-                ? null
-                : new DeveloperShortDto
-                {
-                    Id = g.Developer.Id,
-                    Name = g.Developer.Name,
-                    Country = g.Developer.Country
-                }
-        }).ToList();
-
+        var result = _mapper.Map<List<GameResponseDto>>(games);
         return Ok(result);
     }
 
@@ -47,79 +42,50 @@ public class GameController : ControllerBase
     public async Task<ActionResult<GameResponseDto>> GetById(int id)
     {
         var game = await _service.GetByIdAsync(id);
+        if (game == null) return NotFound();
 
-        if (game == null)
-            return NotFound();
-
-        var result = new GameResponseDto
-        {
-            Id = game.Id,
-            Title = game.Title,
-            ReleaseDate = game.ReleaseDate,
-            Price = game.Price,
-            DeveloperId = game.DeveloperId,
-            Developer = game.Developer == null
-                ? null
-                : new DeveloperShortDto
-                {
-                    Id = game.Developer.Id,
-                    Name = game.Developer.Name,
-                    Country = game.Developer.Country
-                }
-        };
-
+        var result = _mapper.Map<GameResponseDto>(game);
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
-    public async Task<ActionResult<GameResponseDto>> Create(Game game)
+    public async Task<ActionResult<GameResponseDto>> Create(GameCreateDto dto)
     {
+        var validationResult = await _createValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var game = _mapper.Map<Game>(dto);
         var createdGame = await _service.CreateAsync(game);
+        var result = _mapper.Map<GameResponseDto>(createdGame);
 
-        var result = new GameResponseDto
-        {
-            Id = createdGame.Id,
-            Title = createdGame.Title,
-            ReleaseDate = createdGame.ReleaseDate,
-            Price = createdGame.Price,
-            DeveloperId = createdGame.DeveloperId,
-            Developer = createdGame.Developer == null
-                ? null
-                : new DeveloperShortDto
-                {
-                    Id = createdGame.Developer.Id,
-                    Name = createdGame.Developer.Name,
-                    Country = createdGame.Developer.Country
-                }
-        };
-
-        return CreatedAtAction(
-            nameof(GetById),
-            new { id = result.Id },
-            result);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, Game game)
+    public async Task<IActionResult> Update(int id, GameUpdateDto dto)
     {
-        if (id != game.Id)
-            return BadRequest();
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var game = _mapper.Map<Game>(dto);
+        game.Id = id;
 
         var updated = await _service.UpdateAsync(game);
-
-        if (!updated)
-            return NotFound();
+        if (!updated) return NotFound();
 
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _service.DeleteAsync(id);
-
-        if (!deleted)
-            return NotFound();
+        if (!deleted) return NotFound();
 
         return NoContent();
     }

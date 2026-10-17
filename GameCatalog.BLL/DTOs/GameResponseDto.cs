@@ -13,6 +13,8 @@ public class GameResponseDto
     public int DeveloperId { get; set; }
 
     public DeveloperShortDto? Developer { get; set; }
+
+    public List<GenreDto> Genres { get; set; } = new();
 }
 
 public class DeveloperShortDto
