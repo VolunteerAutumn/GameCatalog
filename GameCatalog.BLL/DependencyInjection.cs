@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Microsoft.AspNetCore.Identity;
+using AutoMapper;
 using FluentValidation;
 using GameCatalog.BLL.Validators;
 using GameCatalog.DAL;
@@ -7,6 +8,7 @@ using GameCatalog.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using GameCatalog.BLL.Settings;
 
 namespace GameCatalog.BLL;
 
@@ -34,10 +36,6 @@ public static class DependencyInjection
         services.AddValidatorsFromAssemblyContaining<
             Validators.DeveloperCreateValidator>();
 
-        services
-            .AddIdentityCore<ApplicationUser>()
-            .AddRoles<IdentityRole>()
-            .AddEntityFrameworkStores<GameCatalogDbContext>();
 
         // 2. Because we used 'using GameCatalog.BLL.Validators;' at the top,
         // we can now use the clean name WITHOUT the generic <IdentityRole> suffix,
@@ -51,6 +49,9 @@ public static class DependencyInjection
         services.AddScoped<Interfaces.ITokenService, Services.TokenService>();
         services.AddScoped<Interfaces.IAuthService, Services.AuthService>();
         services.AddScoped<Interfaces.IGenreService, Services.GenreService>();
+
+        services.AddOptions<EmailSettings>().Bind(configuration.GetSection("EmailSettings"));
+        services.AddScoped<Interfaces.IEmailService, Services.EmailService>();
 
         return services;
     }

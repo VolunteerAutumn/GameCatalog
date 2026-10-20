@@ -19,14 +19,17 @@ public class ApiKeyMW
         var method = context.Request.Method;
 
         // Registration and login must be accessible without an API key.
+        // 1. Registration and login must be accessible without an API key.
+        // 2. Email links clicked from a browser must also bypass the API key.
         var isAuthEndpoint =
             HttpMethods.IsPost(method) &&
-            (path.Equals(
-                "/api/Auth/register",
-                StringComparison.OrdinalIgnoreCase) ||
-             path.Equals(
-                "/api/Auth/login",
-                StringComparison.OrdinalIgnoreCase));
+            (path.Equals("/api/Auth/register", StringComparison.OrdinalIgnoreCase) ||
+             path.Equals("/api/Auth/login", StringComparison.OrdinalIgnoreCase) ||
+             path.Equals("/api/Auth/forgot-password", StringComparison.OrdinalIgnoreCase)) ||
+            (HttpMethods.IsGet(method) &&
+             (path.Equals("/api/Auth/confirm-email", StringComparison.OrdinalIgnoreCase) ||
+              path.Equals("/api/Auth/confirm-email-change", StringComparison.OrdinalIgnoreCase) ||
+              path.Equals("/api/Auth/reset-password", StringComparison.OrdinalIgnoreCase)));
 
         if (isAuthEndpoint)
         {

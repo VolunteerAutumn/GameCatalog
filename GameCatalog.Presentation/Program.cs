@@ -74,6 +74,18 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddBll(builder.Configuration);
 
+// Identity Configuration
+builder.Services
+    .AddIdentityCore<GameCatalog.DAL.Entities.ApplicationUser>()
+    .AddRoles<Microsoft.AspNetCore.Identity.IdentityRole>()
+    .AddEntityFrameworkStores<GameCatalog.DAL.Data.GameCatalogDbContext>()
+    .AddDefaultTokenProviders(); // Works perfectly here!
+
+// Register the custom RoleValidator here where the packages are available
+builder.Services.AddScoped<
+    Microsoft.AspNetCore.Identity.IRoleValidator<Microsoft.AspNetCore.Identity.IdentityRole>,
+    GameCatalog.BLL.Validators.RoleValidator>();
+
 // JWT authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
